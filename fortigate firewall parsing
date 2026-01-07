@@ -1,1 +1,53 @@
+GROK PATTERN FOR FORTIGATE FIREWALL 
+input {
+  udp {
+    port => 514
+    type => "syslog"
+  }
+}
 
+filter {
+
+  grok {
+    match => {
+      "message" => [
+        # ======================
+        # FortiGate Firewall logs
+        # ======================
+        '^<%{POSINT:syslog_pri}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" devid="%{DATA:devid}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{DATA:logid}" type="%{WORD:fg_type}" subtype="%{WORD:fg_subtype}" level="%{WORD:fg_level}" vd="%{DATA:vd}" logdesc="%{DATA:logdesc}" sn="%{INT:sn}" user="%{DATA:user}" ui="%{DATA:ui}" method="%{WORD:method}" srcip=%{IP:sourceip} dstip=%{IP:destinationip} action="%{WORD:action}" status="%{WORD:status}" reason="%{DATA:reason}" msg="%{DATA:msg}"',
+        '^<%{INT:syslog_pri}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" devid="%{DATA:devid}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{DATA:logid}" type="%{WORD:type}" subtype="%{WORD:subtype}" level="%{WORD:level}" vd="%{DATA:vd}" logdesc="%{DATA:logdesc}" sn="%{NUMBER:sn}" user="%{DATA:user}" ui="%{DATA:ui}" method="%{WORD:method}" srcip=%{IP:sourceip} dstip=%{IP:destinationip} action="%{WORD:action}" status="%{WORD:status}" reason="%{DATA:reason}" profile="%{DATA:profile}" msg="%{DATA:msg}"$',
+        '^<%{POSINT:syslog_pri}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" devid="%{DATA:devid}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{DATA:logid}" type="%{WORD:type}" subtype="%{WORD:subtype}" level="%{WORD:level}" vd="%{DATA:vd}" logdesc="%{DATA:logdesc}" msg="%{DATA:msg}" action="%{WORD:action}" remip=%{IP:remip} locip=%{IP:locip} remport=%{INT:remport} locport=%{INT:locport} outintf="%{DATA:outintf}" cookies="%{DATA:cookies}" user="%{DATA:user}" group="%{DATA:group}" useralt="%{DATA:useralt}" xauthuser="%{DATA:xauthuser}" xauthgroup="%{DATA:xauthgroup}" assignip=%{DATA:assignip} vpntunnel="%{DATA:vpntunnel}" status="%{DATA:status}" error_num="%{DATA:error_message}" spi="%{DATA:spi}" seq="%{DATA:seq}" fctuid="%{DATA:fctuid}" advpnsc=%{INT:advpnsc}$',
+        '<%{INT:syslog_priority}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" devid="%{DATA:devid}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{DATA:logid}" type="%{WORD:type}" subtype="%{WORD:subtype}" level="%{WORD:level}" vd="%{DATA:vd}" srcip=%{IP:sourceip} identifier=%{INT:identifier} srcintf="%{DATA:srcintf}" srcintfrole="%{DATA:srcintfrole}" dstip=%{IP:destinationip} dstintf="%{DATA:dstintf}" dstintfrole="%{DATA:dstintfrole}" srccountry="%{DATA:srccountry}" dstcountry="%{DATA:dstcountry}" sessionid=%{INT:sessionid} proto=%{INT:proto} action="%{WORD:action}" policyid=%{INT:policyid} policytype="%{WORD:policytype}" poluuid="%{DATA:poluuid}" service="%{DATA:service}" trandisp="%{WORD:trandisp}" duration=%{INT:duration} sentbyte=%{INT:sentbyte} rcvdbyte=%{INT:rcvdbyte} sentpkt=%{INT:sentpkt} rcvdpkt=%{INT:rcvdpkt} vpntype="%{WORD:vpntype}" appcat="%{DATA:appcat}"$',
+        '<%{INT:syslog_priority}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" devid="%{DATA:devid}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{DATA:logid}" type="%{WORD:type}" subtype="%{WORD:subtype}" level="%{WORD:level}" vd="%{DATA:vd}" srcip=%{IP:sourceip} srcport=%{INT:srcport} srcintf="%{DATA:srcintf}" srcintfrole="%{DATA:srcintfrole}" dstip=%{IP:destinationip} dstport=%{INT:destinationport} dstintf="%{DATA:dstintf}" dstintfrole="%{DATA:dstintfrole}" srccountry="%{DATA:srccountry}" dstcountry="%{DATA:dstcountry}" sessionid=%{INT:sessionid} proto=%{INT:proto} action="%{WORD:action}" policyid=%{INT:policyid} policytype="%{WORD:policytype}" poluuid="%{DATA:poluuid}" service="%{DATA:service}" trandisp="%{WORD:trandisp}" duration=%{INT:duration} sentbyte=%{INT:sentbyte} rcvdbyte=%{INT:rcvdbyte} sentpkt=%{INT:sentpkt} rcvdpkt=%{INT:rcvdpkt} vpntype="%{WORD:vpntype}" appcat="%{DATA:appcat}"$',
+        '<%{INT:syslog_pri}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{DATA:logid}" type="%{WORD:type}" subtype="%{WORD:subtype}" level="%{WORD:level}" vd="%{DATA:vd}" logdesc="%{DATA:logdesc}" msg="%{DATA:msg}" action="%{DATA:action}" remip=%{IP:remote_ip} locip=%{IP:local_ip} remport=%{INT:remote_port} locport=%{INT:local_port} outintf="%{DATA:out_interface}" cookies="%{DATA:cookies}" user="%{DATA:user}" group="%{DATA:group}" useralt="%{DATA:useralt}" xauthuser="%{DATA:xauthuser}" xauthgroup="%{DATA:xauthgroup}" assignip=%{DATA:assign_ip} vpntunnel="%{DATA:vpn_tunnel}" status="%{DATA:status}" init="%{DATA:init}" mode="%{DATA:mode}" dir="%{DATA:direction}" stage=%{INT:stage} role="%{DATA:role}" result="%{DATA:result}"$',
+        '<%{INT:syslog_pri}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" devid="%{DATA:devid}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{DATA:logid}" type="%{WORD:type}" subtype="%{WORD:subtype}" level="%{WORD:level}" vd="%{DATA:vd}" logdesc="%{DATA:logdesc}" action="%{DATA:action}" cpu=%{INT:cpu} mem=%{INT:mem} totalsession=%{INT:totalsession} disk=%{INT:disk} bandwidth="%{DATA:bandwidth}" setuprate=%{INT:setuprate} disklograte=%{INT:disklograte} fazlograte=%{INT:fazlograte} freediskstorage=%{INT:freediskstorage} sysuptime=%{INT:sysuptime} waninfo="%{DATA:waninfo}" msg="%{DATA:msg}"$',
+        '<%{INT:priority}>date=%{YEAR:year}-%{MONTHNUM:month}-%{MONTHDAY:day} time=%{TIME:time} devname="%{DATA:devname}" devid="%{DATA:devid}" eventtime=%{NUMBER:eventtime} tz="%{DATA:timezone}" logid="%{NUMBER:logid}" type="%{WORD:type}" subtype="%{WORD:subtype}" level="%{WORD:level}" vd="%{DATA:vd}" logdesc="%{DATA:logdesc}" msg="%{DATA:msg}" action="%{WORD:action}" remip=%{IP:remote_ip} locip=%{IP:local_ip} remport=%{INT:remote_port} locport=%{INT:local_port} outintf="%{DATA:out_interface}" srccountry="%{DATA:src_country}" cookies="%{DATA:cookies}" user="%{DATA:user}" group="%{DATA:group}" useralt="%{DATA:useralt}" xauthuser="%{DATA:xauthuser}" xauthgroup="%{DATA:xauthgroup}" assignip=%{DATA:assign_ip} vpntunnel="%{DATA:vpntunnel}" status="%{WORD:status}" init="%{WORD:init}" mode="%{WORD:mode}" dir="%{WORD:direction}" stage=%{INT:stage} role="%{WORD:role}" result="%{WORD:result}" fctuid="%{DATA:fctuid}" advpnsc=%{INT:advpnsc}$',
+
+    ]
+  }
+}
+  # ======================
+  # Vendor identification
+  # ======================
+
+  if [devname] or [devid] or [eventtime] or [logid] {
+    mutate {
+      add_field => {
+        "vendor" => "fortigate"
+        "device_type" => "firewall"
+      }
+    }
+  }
+}
+output {
+
+  if [vendor] == "fortigate" {
+    elasticsearch {
+      hosts => ["https://elasticsearchip:9200"]
+      index => "grokparsefailure-%{+YYYY.MM.dd}"
+      user => "username of elasticsearch"
+      password => "password of elastic search"
+      ssl_enabled => true
+      ssl_certificate_authorities => ["/etc/logstash/certs/http_ca.crt"]
+  }
+}
