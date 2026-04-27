@@ -231,20 +231,20 @@ output {
 
   if "_grokparsefailure" in [tags] {
     elasticsearch {
-      hosts                => ["https://10.255.254.105:9200"]
+      hosts                => ["https://IP:9200"]
       index                => "grokparsefailure-%{+YYYY.MM.dd}"
       user                 => "elastic"
-      password             => "DKjJ-hZ1Fjz3WnP*oAtt"
+      password             => "PASSWORD"
       ssl_enabled          => true
       ssl_verification_mode => "none"
     }
   }
   else if [vendor] == "fortigate" {
     elasticsearch {
-      hosts                => ["https://10.255.254.105:9200"]
+      hosts                => ["https://IP:9200"]
       index                => "fortigate-%{+YYYY.MM.dd}"
       user                 => "elastic"
-      password             => "DKjJ-hZ1Fjz3WnP*oAtt"
+      password             => "PASSWORD"
       ssl_enabled          => true
       ssl_verification_mode => "none"
     }
