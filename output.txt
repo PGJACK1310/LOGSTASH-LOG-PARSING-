@@ -1,0 +1,44 @@
+  # ==============================================================
+  # Vendor identification
+  # (unchanged from original — works for both kv and grok paths)
+  # ==============================================================
+
+  else if [fg_type] or [fg_subtype] {
+    mutate {
+      add_field => {
+        "vendor"      => "fortigate"
+        "device_type" => "firewall"
+      }
+    }
+  }
+
+}
+
+# ==============================================================
+# OUTPUT — unchanged from original
+# ==============================================================
+
+output {
+
+  if "_grokparsefailure" in [tags] {
+    elasticsearch {
+      hosts                => ["https://IP:9200"]
+      index                => "grokparsefailure-%{+YYYY.MM.dd}"
+      user                 => "elastic"
+      password             => "PASSWORD"
+      ssl_enabled          => true
+      ssl_verification_mode => "none"
+    }
+  }
+  else if [vendor] == "fortigate" {
+    elasticsearch {
+      hosts                => ["https://IP:9200"]
+      index                => "fortigate-%{+YYYY.MM.dd}"
+      user                 => "elastic"
+      password             => "PASSWORD"
+      ssl_enabled          => true
+      ssl_verification_mode => "none"
+    }
+  }
+
+}
