@@ -1,34 +1,51 @@
-# 🔥 FortiGate Firewall Log Parsing (Logstash)
+# 🔥 Firewall Log Parsing (Logstash)
 
-This project provides a high-performance Logstash pipeline for parsing FortiGate firewall logs using a hybrid **Grok + KV parsing strategy**.
+Lightweight Logstash pipeline for parsing firewall logs into structured data for Elasticsearch.
 
-It is optimized to replace complex multi-pattern grok configurations with a single scalable pipeline.
-
----
-
-## 📌 Overview
-
-This Logstash configuration ingests FortiGate syslog data and transforms it into structured, enriched events ready for Elasticsearch and Kibana.
-
-The parser:
-- Detects FortiGate logs using `devname=` marker
-- Extracts timestamp and metadata
-- Parses all key-value pairs dynamically
-- Normalizes field names
-- Enriches logs with GeoIP data
-- Categorizes logs for analytics
+Currently supports:
+- FortiGate firewall logs
 
 ---
 
-## ⚙️ Pipeline Architecture
+## ⚙️ Features
 
-### 1. Input
-- Listens for syslog messages over UDP
+- Syslog input (UDP 514)
+- KV-based parsing (fast and scalable)
+- Extracts IPs, ports, protocol, action
+- Timestamp normalization
+- GeoIP enrichment
+- Elasticsearch-ready output
 
-```logstash
-input {
-  udp {
-    port => 514
-    type => "syslog"
-  }
-}
+---
+
+## 🚀 Usage
+
+1. Clone the repository:
+git clone https://github.com/PGJACK1310/LOGSTASH-LOG-PARSING-.git
+
+2. Copy config file to Logstash:
+ /etc/logstash/conf.d/
+
+3. Start Logstash:
+sudo systemctl start logstash
+
+---
+
+## 📁 Project Structure
+
+.
+├── fortigate.conf
+└── README.md
+
+---
+
+## 🔮 Roadmap
+
+- Add support for more firewall vendors (Cisco, Palo Alto, etc.)
+
+---
+
+## 👨‍💻 Author
+
+PGJACK1310  
+https://github.com/PGJACK1310
