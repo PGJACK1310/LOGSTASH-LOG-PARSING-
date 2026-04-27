@@ -1,0 +1,201 @@
+filter {
+
+  # ==============================================================
+  # BLOCK 1 — FortiGate Standard Logs
+  # Detection : message contains devname= (FortiGate key marker)
+  # Strategy  : Single header grok + kv filter (replaces 50+ patterns)
+  # All fields mapped to exact same names as original grok patterns
+  # ==============================================================
+
+  if [message] =~ /devname=/ {
+
+    # ── Step 1: Strip syslog priority, extract date/time header ──
+    grok {
+      match => {
+        "message" => "^<%{INT:syslog_pri}>date=%{DATA:fg_date} time=%{TIME:fg_time} %{GREEDYDATA:fg_body}"
+      }
+      tag_on_failure => ["_fg_header_fail"]
+    }
+
+    if "_fg_header_fail" not in [tags] {
+
+      # ── Step 2: Parse ALL key=value pairs in one shot ──
+      # This single filter replaces all 50+ FortiGate grok patterns.
+      # Handles quoted values, unquoted values, and all log subtypes
+      # (traffic, event, vpn, utm, system, ddos, nat, snmp, etc.)
+      kv {
+        source      => "fg_body"
+        field_split => " "
+        value_split => "="
+        target      => "fg"
+        trim_value  => "\""
+        include_keys => [
+          "devname", "devid", "logid", "type", "subtype", "level", "vd",
+          "logdesc", "action", "status", "reason", "msg",
+          "srcip",  "dstip",  "srcport",  "dstport",
+          "srcintf", "dstintf", "dstintfrole", "srcintfrole",
+          "srccountry", "dstcountry",
+          "remip", "locip", "remport", "locport",
+          "user", "ui", "method", "sn",
+          "vpntunnel", "assignip", "outintf",
+          "direction", "dir",
+          "proto", "duration", "sentbyte", "rcvdbyte", "sentpkt", "rcvdpkt",
+          "policyid", "policytype", "poluuid", "service", "sessionid",
+          "cpu", "mem", "totalsession", "disk",
+          "bandwidth", "setuprate", "disklograte",
+          "fazlograte", "freediskstorage", "sysuptime", "waninfo",
+          "nat", "portbegin", "portend", "poolname",
+          "interface", "port", "name",
+          "vpntype", "appcat", "trandisp",
+          "stitch", "trigger", "stitchaction", "from",
+          "saddr",
+          "community", "version",
+          "error_num", "spi", "seq",
+          "tunnelip", "peer_notif",
+          "in_spi", "out_spi", "role",
+          "fctuid", "advpnsc",
+          "phase2_name", "identifier",
+          "result", "state",
+          "group", "xauthuser", "xauthgroup",
+          "cookies", "useralt"
+        ]
+      }
+
+      # ── Step 3: Promote fields to top level ──
+      # Field names match EXACTLY the original grok-captured names
+      mutate {
+        rename => {
+          "[fg][type]"        => "fg_type"
+          "[fg][subtype]"     => "fg_subtype"
+          "[fg][level]"       => "level"
+          "[fg][devname]"     => "devname"
+          "[fg][devid]"       => "devid"
+          "[fg][logdesc]"     => "event_name"
+          "[fg][msg]"         => "event_message"
+          "[fg][srcip]"       => "src_ip"
+          "[fg][dstip]"       => "dst_ip"
+          "[fg][srcport]"     => "src_port"
+          "[fg][dstport]"     => "dst_port"
+          "[fg][srcintf]"     => "srcintf"
+          "[fg][dstintf]"     => "dstintf"
+          "[fg][dstintfrole]" => "dstintfrole"
+          "[fg][srccountry]"  => "src_country"
+          "[fg][dstcountry]"  => "dst_country"
+          "[fg][remip]"       => "remote_ip"
+          "[fg][locip]"       => "local_ip"
+          "[fg][remport]"     => "remote_port"
+          "[fg][locport]"     => "local_port"
+          "[fg][user]"        => "user"
+          "[fg][ui]"          => "ui"
+          "[fg][method]"      => "method"
+          "[fg][action]"      => "action"
+          "[fg][status]"      => "status"
+          "[fg][reason]"      => "reason"
+          "[fg][vpntunnel]"   => "vpn_tunnel"
+          "[fg][assignip]"    => "assign_ip"
+          "[fg][outintf]"     => "out_interface"
+          "[fg][direction]"   => "direction"
+          "[fg][dir]"         => "direction"
+          "[fg][proto]"       => "proto"
+          "[fg][duration]"    => "duration"
+          "[fg][sentbyte]"    => "sent_bytes"
+          "[fg][rcvdbyte]"    => "recv_bytes"
+          "[fg][sentpkt]"     => "sent_pkt"
+          "[fg][rcvdpkt]"     => "recv_pkt"
+          "[fg][cpu]"         => "cpu"
+          "[fg][mem]"         => "mem"
+          "[fg][nat]"         => "nat_ip"
+          "[fg][portbegin]"   => "port_begin"
+          "[fg][portend]"     => "port_end"
+          "[fg][poolname]"    => "poolname"
+          "[fg][vpntype]"     => "vpn_type"
+          "[fg][error_num]"   => "error_message"
+          "[fg][tunnelip]"    => "tunnel_ip"
+          "[fg][peer_notif]"  => "peer_notif"
+          "[fg][community]"   => "community"
+          "[fg][version]"     => "snmp_version"
+          "[fg][in_spi]"      => "in_spi"
+          "[fg][out_spi]"     => "out_spi"
+          "[fg][role]"        => "role"
+          "[fg][stitch]"      => "state"
+          "[fg][phase2_name]" => "phase2_name"
+          "[fg][result]"      => "result"
+          "[fg][name]"        => "link_name"
+          "[fg][interface]"   => "port"
+          "[fg][state]"       => "state"
+          "[fg][group]"       => "group"
+        }
+      }
+
+      # ── saddr fallback: used in NAT logs instead of srcip ──
+      if [fg][saddr] {
+        if ![src_ip] {
+          mutate { rename => { "[fg][saddr]" => "src_ip" } }
+        }
+        mutate { remove_field => ["[fg][saddr]"] }
+      }
+
+      # ── Step 4: Parse timestamp → @timestamp ──
+      mutate {
+        add_field => { "fg_timestamp" => "%{fg_date} %{fg_time}" }
+      }
+      date {
+        match    => [ "fg_timestamp", "yyyy-MM-dd HH:mm:ss" ]
+        target   => "@timestamp"
+        timezone => "Asia/Kolkata"        # adjust to your FortiGate timezone
+      }
+
+      # ── Step 5: Integer type conversions ──
+      mutate {
+        convert => {
+          "src_port"    => "integer"
+          "dst_port"    => "integer"
+          "remote_port" => "integer"
+          "local_port"  => "integer"
+          "proto"       => "integer"
+          "duration"    => "integer"
+          "sent_bytes"  => "integer"
+          "recv_bytes"  => "integer"
+          "sent_pkt"    => "integer"
+          "recv_pkt"    => "integer"
+          "cpu"         => "integer"
+          "mem"         => "integer"
+          "port_begin"  => "integer"
+          "port_end"    => "integer"
+        }
+      }
+
+      # ── Step 6: GeoIP enrichment ──
+      if [src_ip] {
+        geoip {
+          source => "src_ip"
+          target => "src_geoip"
+        }
+      }
+      if [dst_ip] {
+        geoip {
+          source => "dst_ip"
+          target => "dst_geoip"
+        }
+      }
+
+      # ── Step 7: Log category tag (useful for Kibana dashboards) ──
+      if [fg_type] == "traffic" {
+        mutate { add_field => { "log_category" => "network_traffic" } }
+      } else if [fg_type] == "utm" {
+        mutate { add_field => { "log_category" => "security" } }
+      } else if [fg_type] == "event" and [fg_subtype] == "vpn" {
+        mutate { add_field => { "log_category" => "vpn" } }
+      } else if [fg_type] == "event" and [fg_subtype] == "system" {
+        mutate { add_field => { "log_category" => "system" } }
+      } else if [fg_type] == "event" and [fg_subtype] == "user" {
+        mutate { add_field => { "log_category" => "authentication" } }
+      }
+
+      # ── Step 8: Cleanup temp fields ──
+      mutate {
+        remove_field => ["fg_body", "fg_date", "fg_time", "fg_timestamp", "fg"]
+      }
+    }
+
+  }
